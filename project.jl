@@ -1,6 +1,6 @@
 using POMDPs, POMDPModels, POMDPToolbox, QMDP
 POMDPs.add_all()
-Pkg.update()
+#Pkg.update()
 #POMDPs.add("generate_sor")
 
 type HealthPOMDP <: POMDP{Float64, Symbol, Float64} #POMDP(state, action, observation)
@@ -88,7 +88,7 @@ function POMDPs.pdf(d::healthTransitionDistribution, so::Float64)
     #so ? (return d.p) : (return 1.0-d.p)
 end;
 
-POMDPs.rand(rng::AbstractRNG, d::healthTransitionDistribution) = rand(rng) <= d.p;
+POMDPs.rand(rng::AbstractRNG, d::healthTransitionDistribution) = 0.2
 
 #OPTIONAL
 
@@ -126,8 +126,11 @@ function POMDPs.reward(health::HealthPOMDP, s::Float64, a::Symbol)
 
 end
 
-function POMDPs.observation(health::HealthPOMDP, a::Symbol, s::Float64, sp::Float64) #a::Symbol
+function POMDPs.observation(health::HealthPOMDP, s::Float64, a::Symbol, sp::Float64) #a::Symbol
     #does nothing currently. Works with the noisiness of our observations
+    possible = [1,2,3,4,5]
+    probs = [0.2,0.2,0.2,0.2,0.2]
+    return POMDPToolbox.SparseCat{possible, probs}
     d = healthTransitionDistribution()
     #if a == :eatMore
     d.p = 0.2
