@@ -1,5 +1,6 @@
 using POMDPs, POMDPModels, POMDPToolbox, QMDP
-POMDPs.add_all()
+#Pkg.checkout("POMDPs")
+#POMDPs.add_all()
 #Pkg.update()
 #POMDPs.add("generate_sor")
 
@@ -64,18 +65,21 @@ POMDPs.observations(health::HealthPOMDP, s::Float64) = observations(health)
 #from here till "OPTIONAL?" is a part that is needed for algorithms that do sampling, so it may not be needed.
 
 type healthObservationDistribution
-    p::Float64
+    #p::Float64
+    p::Vector{Float64}
     it::Vector{Float64}
 end
 
 type healthTransitionDistribution
-    p::Float64
+    #p::Float64
+    p::Vector{Float64}
     it::Vector{Float64}
 end 
 
-healthTransitionDistribution() = healthTransitionDistribution(0.2, [1,2,3,4,5])
-println(healthTransitionDistribution().p)
+healthTransitionDistribution() = healthTransitionDistribution([0.2,0.2,0.2,0.2,0.2], [1.0,2.0,3.0,4.0,5.0])
+#println(healthTransitionDistribution().p)
 POMDPs.iterator(d::healthTransitionDistribution) = d.it
+#print healthTransitionDistribution()
 
 #healthObservationDistribution() = (0.9, [1,2,3,4,5])
 #println(healthObservationDistribution())
@@ -88,7 +92,19 @@ function POMDPs.pdf(d::healthTransitionDistribution, so::Float64)
     #so ? (return d.p) : (return 1.0-d.p)
 end;
 
-POMDPs.rand(rng::AbstractRNG, d::healthTransitionDistribution) = 0.2
+function getRandomState()
+    a = collect(1:5)
+    temp = a[rand(1:end)]
+    newTemp = convert(Float64, temp)
+    return newTemp
+end;
+
+
+
+#println((float)states[rand(1:end)])
+POMDPs.rand(rng::AbstractRNG, d::healthTransitionDistribution) = getRandomState()
+
+#POMDPs.rand(rng::AbstractRNG, d::healthTransitionDistribution) = (float)states[rand(1:end)]
 
 #OPTIONAL
 
@@ -96,14 +112,16 @@ POMDPs.rand(rng::AbstractRNG, d::healthTransitionDistribution) = 0.2
 
 function POMDPs.transition(health::HealthPOMDP, s::Float64, a::Symbol)
     d = healthTransitionDistribution()
+    #println(d)
     #does nothing currently
     if a == :eatMore || a == :sleepMore
-        d.p = 0.1
+        d.p = [0.1,0.1,0.3,0.3,0.2]
     elseif a == :goTakeAWalk
-        d.p = 0.5
+        d.p = [0.1,0.1,0.3,0.3,0.2]
     elseif s == 5
-        d.p = 1
+        d.p = [0.1,0.1,0.1,0.1,0.6]
     end
+    #println(d)
     d
 end;
 
@@ -126,24 +144,30 @@ function POMDPs.reward(health::HealthPOMDP, s::Float64, a::Symbol)
 
 end
 
-function POMDPs.observation(health::HealthPOMDP, s::Float64, a::Symbol, sp::Float64) #a::Symbol
-    #does nothing currently. Works with the noisiness of our observations
-    possible = [1,2,3,4,5]
-    probs = [0.2,0.2,0.2,0.2,0.2]
-    return POMDPToolbox.SparseCat{possible, probs}
+
+function POMDPs.observation(health::HealthPOMDP, a::Symbol, sp::Float64) #a::Symbol
     d = healthTransitionDistribution()
+    #d = healthObservationDistribution([0.05,0.10,0.30,0.30,0.35],[1.0,2.0,3.0,4.0,5.0])
+    #println(d)
+    #println("hello")
+    #does nothing currently. Works with the noisiness of our observations
+    #possible = [1,2,3,4,5]
+    #probs = [0.2,0.2,0.2,0.2,0.2]
+    #return POMDPToolbox.SparseCat(possible, probs)
     #if a == :eatMore
-    d.p = 0.2
-   #end
-    #d
+    #d.p = 
+    #end
+    d
 end;
+
+#
 
 POMDPs.discount(health::HealthPOMDP) = health.discountFactor
 POMDPs.n_states(::HealthPOMDP) = 5
 POMDPs.n_actions(::HealthPOMDP) = 3
 POMDPs.n_observations(::HealthPOMDP) = 5; #TODO: needs to be updated
 
-POMDPs.initial_state_distribution(health::HealthPOMDP) = healthTransitionDistribution(0.2, [1,2,3,4,5]);
+POMDPs.initial_state_distribution(health::HealthPOMDP) = healthTransitionDistribution([0.05,0.15,0.6,0.15,0.05], [1.0,2.0,3.0,4.0,5.0]);
 
 #probability_check(health) # checks that both observation and transition functions give probs that sum to unity
 #obs_prob_consistency_check(health) # checks the observation probabilities
