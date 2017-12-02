@@ -28,13 +28,13 @@ POMDPs.states(::HealthPOMDP) = [1.0,2.0,3.0,4.0,5.0];
 #possible actions for POMDP. In our case, I was thinking of maintaining a list of actions
 #and then having each index correspond to one specific action
 
-listAllActions = [:eatMore, :goTakeAWalk, :sleepMore] #sample list of actions
+listAllActions = [:eatMore, :goTakeAWalk, :sleepMore, :eatVegetables, :drinkWater, :keepItUp] #sample list of actions
 
-POMDPs.actions(::HealthPOMDP) = [:eatMore, :goTakeAWalk, :sleepMore]
+POMDPs.actions(::HealthPOMDP) = [:eatMore, :goTakeAWalk, :sleepMore, :eatVegetables, :drinkWater, :keepItUp]
 POMDPs.actions(health::HealthPOMDP, state::Float64) = POMDPs.actions(health)
 
-exampleState = 1
-exampleAction = :eatMore
+#exampleState = 1
+#exampleAction = :eatMore
 
 
 #function POMDPS.action_index(::HealthPOMDP, a::Symbol)
@@ -45,6 +45,12 @@ function POMDPs.action_index(::HealthPOMDP, a::Symbol)
         return 2
     elseif a==:sleepMore
         return 3
+    elseif a==:eatVegetables
+        return 4
+    elseif a==:drinkWater
+        return 5
+    elseif a==:keepItUp
+        return 6
     end
     error("invalid TigerPOMDP action: $a")
 end;
@@ -88,7 +94,8 @@ POMDPs.iterator(d::healthTransitionDistribution) = d.it
 
 #observation or transition pdf. Since our POMDP is discrete, it returns the p of a given element.
 function POMDPs.pdf(d::healthTransitionDistribution, so::Float64)
-    return 0.2
+    state = trunc(Int, so)
+    return d.p[state]
     #so ? (return d.p) : (return 1.0-d.p)
 end;
 
@@ -118,6 +125,8 @@ function POMDPs.transition(health::HealthPOMDP, s::Float64, a::Symbol)
         d.p = [0.1,0.1,0.3,0.3,0.2]
     elseif a == :goTakeAWalk
         d.p = [0.1,0.1,0.3,0.3,0.2]
+    elseif a == :eatVegetables || a == :drinkWater
+        d.p = [0.2,0.3,0.2,0.2,0.1]
     elseif s == 5
         d.p = [0.1,0.1,0.1,0.1,0.6]
     end
@@ -157,6 +166,9 @@ function POMDPs.observation(health::HealthPOMDP, a::Symbol, sp::Float64) #a::Sym
     #if a == :eatMore
     #d.p = 
     #end
+    if a == :eatMore
+        d.p = [0.4,0.2,0.2,0.2,0.1]
+    end
     d
 end;
 
@@ -164,7 +176,7 @@ end;
 
 POMDPs.discount(health::HealthPOMDP) = health.discountFactor
 POMDPs.n_states(::HealthPOMDP) = 5
-POMDPs.n_actions(::HealthPOMDP) = 3
+POMDPs.n_actions(::HealthPOMDP) = 6
 POMDPs.n_observations(::HealthPOMDP) = 5; #TODO: needs to be updated
 
 POMDPs.initial_state_distribution(health::HealthPOMDP) = healthTransitionDistribution([0.05,0.15,0.6,0.15,0.05], [1.0,2.0,3.0,4.0,5.0]);
@@ -176,6 +188,7 @@ POMDPs.initial_state_distribution(health::HealthPOMDP) = healthTransitionDistrib
 # initialize a solver and compute a policy
 solver = QMDPSolver() # from QMDP
 policy = solve(solver, health)
+println(policy)
 belief_updater = updater(policy) # the default QMDP belief updater (discrete Bayesian filter)
 
 # run a short simulation with the QMDP policy
@@ -189,6 +202,29 @@ for (s, b, a, o) in eachstep(history, "sbao")
     println("and observation $o was received.\n")
 end
 println("Discounted reward was $(discounted_reward(history)).")
+
+function askForObservations()
+
+
+end;
+
+function calculateStateFromObservation(o::Vector{Float64})
+    #TODO
+
+
+end;
+
+function convertToText(a::Symbol)
+
+numberCheckIns = 30
+
+count = 0
+
+while count <= numberCheckIns
+    println("Hello")
+    stateDistribution = calculateStateFromObservation()
+    action = calculateBestAction(stateDistribution)
+    convertToText(action)
 
 #function main()
  #   print("This is the main function where we will do everything")
