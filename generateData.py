@@ -33,13 +33,14 @@ def generateData(dataPoints):
 	   # spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
 
 	#return
-	file = open('data.txt', 'w')
+	file = open('data2.0.txt', 'w')
 
 	for i in range(dataPoints):
 		state = generateRandomState()
 		action = random.choice(actions)
 		nextState = generateRandomState()
-		reward = random.uniform(1,10)
+		#reward = random.uniform(1,10)
+		reward = 2 * nextState[0] + 2 * nextState[1] + 2 * nextState[2]
 		file.write(str(state) + "|")
 		file.write(str(action) + "|")
 		file.write(str(nextState) + "|")
